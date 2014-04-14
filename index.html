@@ -1,0 +1,2126 @@
+<html>
+<head>
+	  <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+		<META HTTP-EQUIV="Content-Language" content="EN">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+    <META HTTP-EQUIV="Expires" CONTENT="-1">
+    <!-- open graph below -->
+    <meta property="og:title" content="Mapgnosis ~ User Added Knowledge"  />
+    <meta property="og:url" content="http://assets.zgroks.com/index.html"/>
+		<meta property="og:description" content="@Mapgnosis" />
+		<meta property="og:image" content="http://bike.zgroks.com/zgroksSmall.png" />
+    <!-- Description below -->
+    <meta name="description" content="Mapgnosis, User Added Knowledge"/>
+		<!-- set Viewport below -->
+		<meta name="viewport" content="width=device-width,  initial-scale=1.0, minimum-scale=1.0, maximum-scale=2.0">
+    <title>Mapgnosis FR</title>
+    <!-- css for blue jquery-ui-1 buttons below -->
+    <link type="text/css" href="http://gosmap.zgroks.com/css/dark-hive/jquery-ui-1.10.4.custom.css" rel="stylesheet" />
+
+    <!-- css for main application below -->
+    <link type="text/css" href="http://assets.zgroks.com/assets.css" rel="stylesheet" />
+    <!-- JSON object containing icons and their attribute and describing the input ui below -->
+    <script src="http://assets.zgroks.com/assetMapIcons.js" type="text/javascript"></script>
+    <!-- JQUERY called from Google below -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <!-- main call to Google Maps JavaScript API below with Robert Torzynski key -->
+    <script src="http://maps.google.com/maps/api/js?key=AIzaSyAnnAhM-8Gl6lGMOL60ju99KxZ6stf-yGE&v=3&libraries=panoramio,weather&sensor=true" type="text/javascript"></script>
+    <!-- call to MarkerClusterer below -->
+    <script src="http://www.zgroks.com/gis/markerclusterer.js" type="text/javascript"></script>
+		<!-- call to json.lib.com below -->
+		<script src="http://call.jsonlib.com/jsonlib.js" type="text/javascript"></script>
+		<!-- four calls to jquery.ui below -->
+		<script type="text/javascript" src="http://gosmap.zgroks.com/js/jquery-ui-1.8.17.custom.min.js"></script>
+		<script type="text/javascript" src="http://gosmap.zgroks.com/js/jquery.ui.core.js"></script>
+	  <script type="text/javascript" src="http://gosmap.zgroks.com/js/jquery.ui.button.js"></script>
+	  <script type="text/javascript" src="http://gosmap.zgroks.com/js/jquery.ui.widget.js"></script>
+	  <!-- call Tablecloth below -->
+    <script type="text/javascript" src="tablecloth.js"></script>
+
+
+
+    <script type="text/javascript">
+
+   var marker;
+   var infowindow;
+   var infoWindow2;
+   var myCtr;
+   var geocoder;
+   var map;
+   var places;
+   var iw;
+   var markers = []
+   var autocomplete;
+
+var qsParm = new Array();
+
+// database: trip; table: assets; - rrt 11/23/2012
+// http://184.22.222.163:2082/frontend/x3/sql/PhpMyAdmin.html - rrt
+// http://www.zgroks.com/phpminiadmin.php <-- more for admin - rrt
+
+function qs() {
+var query = window.location.search.substring(1);
+var parms = query.split('&');
+for (var i=0; i<parms.length; i++) {
+var pos = parms[i].indexOf('=');
+if (pos > 0) {
+var key = parms[i].substring(0,pos);
+var val = parms[i].substring(pos+1);
+qsParm[key] = val;
+}  // end if
+}  // end for loop
+}  // end function qs
+
+qsParm['lat'] = null;
+qsParm['lng'] = null;
+qsParm['z'] = null;
+qsParm['t'] = null;
+qsParm['url'] = null;
+qsParm['idz'] = null;
+
+qs();
+
+var isQsSet = 0; // query string start up location is blank
+
+if (qsParm['lat'] && qsParm['lng']) {
+var isQsSet = 1; // query string start up location is not blank
+var myCenter = new google.maps.LatLng(qsParm['lat'],qsParm['lng']);
+}
+else
+	{
+	var myCenter = new google.maps.LatLng(43.16,-77.61);    // Starting Point - Rochester, NY
+}
+
+if (qsParm['z']) {
+	var myZoom= parseInt(qsParm['z']);
+
+  }
+   else
+ {
+	var myZoom = 14;   //sets default
+}    // end if myZ paramater
+
+
+if (qsParm['t']) {
+	var myType= qsParm['t'];
+    } // end if qsParm t
+  else
+  	{
+   var myType = 'roadmap';   // sets default
+   }    // end if t paramater
+
+var2link= '<div id="headerBar2">' +
+'<span id="goButton" style="margin-bottom: 0px;"></span>' +
+'<span id="locationField"><input type="text" id="gaddress" size="15" value="Rishikesh, India" title="Google Geocoder"></span>' +
+'<span id="addData"></span>'+
+'<span id="about"></span>'+
+'<span id="pLink"></span>'+
+'<span id="resetToggle"></span>'+
+'<span id="iconsToggle"></span>'+
+'<span id="permaLinkOut"></span>'+
+'<span id="geoLocate"></span>'+
+'</div>';
+
+document.write(var2link);
+
+$("#goButton").button().html('Go To').css({"width": 64});
+$("#pLink").button().html('Links').css({"width": 64});;
+$("#addData").button().html('Add ').css({"width": 64});;
+$("#geoLocate").button().html('Locate').css({"width": 64});;
+$("#about").button().html('About').css({"width": 64});;
+$("#resetToggle").button().html('+').css({"width": 32});;
+$("#permaLinkOut").button().html('-').css({"width": 32});;
+$("#zoomInButton").button().html('+').css({"width": 48});;
+$("#headerBar2").hide();
+
+  ///     /)     /)                              /)   ,      ///
+  ///    (/_ ___(/_   _/_ _____  _      __   _  (/_          ///
+  ///   /_) (_)/_)    (__(_)/ (_'_)_(_/_/ (_/_)_/(___(_      ///
+  ///                          .-/ .-/                       ///
+  ///  April, 2014            (_/ (_/      Rochester, NY     ///
+  ///  Waits until DOM is loaded then Application loads.     ///
+
+    function myload() {
+    geocoder = new google.maps.Geocoder();
+
+    var mapgnosisStyle = [ {
+  	featureType: "transit.station", elementType: "all", stylers: [ { visibility: "on" }, { hue: "#1100ff" } ] },{
+  	featureType: "water", elementType: "all", stylers: [ { visibility: "on" }, { hue: "#0011ff" } ] },{
+  	featureType: "road.highway", elementType: "all", stylers: [ { visibility: "on" }, { hue: "#ff7700" } ] },{
+  	featureType: "landscape.man_made", elementType: "all", stylers: [ { visibility: "on" }, { hue: "#00a1ff" }, { saturation: 66 }, { lightness: 0 } ] },{
+  	featureType: "road.local", elementType: "all", stylers: [ { hue: "#08ff00" }, { saturation: 51 } ] },{
+  	featureType: "all", elementType: "all", stylers: [ ] } ];
+
+    	  var mapOptions = {
+    	  mapTypeControl: true,
+    	  streetViewControl: true,
+    	  tilt: 0,
+        center: myCenter,
+        styles: mapgnosisStyle,
+        noClear: true,
+        zoom: myZoom,
+        zoomControl: false,
+
+        streetViewControlOptions: {
+        position: google.maps.ControlPosition.LEFT_CENTER
+        },
+        zoomControlOptions: {
+        style: google.maps.ZoomControlStyle.AUTO,
+        position: google.maps.ControlPosition.LEFT_CENTER
+        },
+        scaleControl: false,
+        panControl: false,
+        disableDefaultUI: false,
+        draggableCursor: 'crosshair',
+        mapTypeId: myType
+    	  }; // end var mapOptions
+
+map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+//maxZoomService = new google.maps.MaxZoomService();
+
+map.controls[google.maps.ControlPosition.TOP_LEFT].push(pLink);
+map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(gaddress);
+map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(goButton);
+map.controls[google.maps.ControlPosition.LEFT_TOP].push(addData);
+map.controls[google.maps.ControlPosition.LEFT_TOP].push(geoLocate);
+map.controls[google.maps.ControlPosition.RIGHT_TOP].push(about);
+map.controls[google.maps.ControlPosition.RIGHT_TOP].push(resetToggle);
+map.controls[google.maps.ControlPosition.RIGHT_TOP].push(permaLinkOut);
+
+
+
+
+
+
+// Criminal Justice programs below from this address: http://data.ny.gov/resource/8dgi-zhrp.json
+// Selections can be made of various attribute combinations, below
+//   $.ajax({
+//				"url": "http://data.ny.gov/resource/8dgi-zhrp.json",
+//				"type": "GET",
+//				"data": {"county": "Monroe", "agency_type" : "Police and Sheriff"},
+//				"dataType":"JSON"
+//			}).done(function(data){
+//					  if(data){
+//						  $.each(data, function(key, value){
+//						  	var iconLabel2= "P";
+//						  	var iconSize = 9;
+//							   var markerLoc= new google.maps.LatLng(value.location.latitude,value.location.longitude);
+//							   var marker = new google.maps.Marker({
+//   						      position: markerLoc,
+//   						      draggable: true,
+//   						      map: map,
+//   						      icon: "http://bike.zgroks.com/labelblue.php?text=" + iconLabel2 + "&size=" + iconSize,
+//   						      title: value.agency
+//                  }); // end marker if want to modify marker should be done above
+//                  // below, create an infowindow with the description inside
+//                    var infowindow = new google.maps.InfoWindow({
+//     								content: "<div id='info' class='viewBoxClass' ><strong>" +
+//     								value.agency + "</strong><br>" +
+//     								value.agency_category + "</strong><br>" +
+//     								value.agency_type + "</strong><br>" +
+//     								value.street_address + "<br>" +
+//     								value.city + ", " + value.state + "&nbsp;&nbsp;" + value.zip + "<br>" +
+//     								value.telephone + "<br>" +
+//     							  "<a href='#' title= 'Zoom to this Location.' onclick='zoomInTo(" +
+//                    value.location.latitude + " , " + value.location.longitude + "); return false;'>Zoom Here</a><br>" +
+//                    "<a href='http://data.ny.gov/resource/8dgi-zhrp' title='More at Open New York' target='_blank'/>About the Data</a><br>"+
+//                    "<a href='https://www.hackerleague.org/hackathons/at-and-t-rochester-civic-app-challenge/hacks/mapgnosis' title='More about this Map' target='_blank'/>About the Map</a><hr>"+
+//     								"<img src='http://bike.zgroks.com/labelblue.php?text=" + iconLabel2+ "&size=9'/><span style='font-size: .9em'> - " + value.agency_category + "</span><br>"
+//     								});
+//     							    google.maps.event.addListener(marker, 'click', function() {
+//   								    infowindow.open(map,marker);
+//                   });
+//		          }); // end each data
+//             }; // end if data
+//           });
+//
+//// Child Care Programs below from this address: http://data.ny.gov/resource/4j2r-6sry.json
+//// Genesee-Finger Lakes Region: Child Care Regulated Programs
+//// Limited to total capacity of 40 and above by SODA parameters
+//   $.ajax({
+//				"url": "http://data.ny.gov/resource/4j2r-6sry.json",
+//				"type": "GET",
+//				"data": {"County": "Monroe"},
+//				"dataType":"JSON"
+//			}).done(function(data){
+//					  if(data){
+//						  $.each(data, function(key, value){
+//						  	var iconLabel = "CC";
+//						  	var iconSize = 8;
+//							   var markerLoc= new google.maps.LatLng(value.location.latitude,value.location.longitude);
+//							   if (value.total_capacity > 40) {
+//							   var marker = new google.maps.Marker({
+//   						      position: markerLoc,
+//   						      draggable: true,
+//   						      map: map,
+//   						      icon: "http://bike.zgroks.com/labelpurple.php?text=" + iconLabel + "&size=" + iconSize,
+//   						      title: value.site_name
+//                  }); // end marker if want to modify marker should be done above
+//                  // this would be the spot to create an infowindow with the description inside
+//                    var infowindow = new google.maps.InfoWindow({
+//     								content: "<div id='info' class='viewBoxClass' ><strong>" +
+//     								value.facility_name + "</strong><br>" +
+//     								value.street_number + " " + value.street_name + "<br>" +
+//     								value.city + ", " + value.state + "&nbsp;&nbsp;" + value.zip_code +"<br>" +
+//     								"Telephone: " + value.phone_number + "<br>" +
+//     								"Total Capacity: " + value.total_capacity + "<br>" +
+//     								"<a href='" + value.additional_information.url + "' title='Office of Children and Family Services'>Site Profile</a>&nbsp;<span style='font-size: .8em'>NYS OCFS</span><hr>" +
+//     							  "<a href='#' title= 'Zoom to this Location.' onclick='zoomInTo(" +
+//                    value.location.latitude + " , " + value.location.longitude + "); return false;'>Zoom Here</a><br>" +
+//                    "<a href='http://data.ny.gov/resource/4j2r-6sry' title='More at Open New York' target='_blank'/>About the Data</a><br>"+
+//                    "<a href='https://www.hackerleague.org/hackathons/at-and-t-rochester-civic-app-challenge/hacks/mapgnosis' title='More about this Map' target='_blank'/>About the Map</a><hr>"+
+//     								"<img src='http://bike.zgroks.com/labelpurple.php?text=" + iconLabel + "&size=9'/><span style='font-size: .9em'> - Child Care Regulated Programs</span><br>"
+//     								});
+//     							    google.maps.event.addListener(marker, 'click', function() {
+//   								    infowindow.open(map,marker);
+//                   });
+//                }
+//		          }); // end each data
+//             }; // end if data
+//           });
+//
+
+var fusionopts = {
+  suppressInfoWindows: true,
+  clickable: false
+}
+
+/////    fusionopts prevents FusionTablesLayers from responding to click events
+/////    it's most useful when polygons that have associated infoWindows are being displayed as Fusion Table layers
+/////    there are times where it needs to be included as a parameter to allow right-click events to reach the appropriate listeners
+
+var markerCH = new google.maps.Marker({
+map: map,
+icon: new google.maps.MarkerImage('http://www.zgroks.com/icons/bullseye2.png', null, null, new google.maps.Point(15,15)),
+});
+markerCH.bindTo('position', map, 'center');
+var countyLayer = new google.maps.FusionTablesLayer('1AffoHq3cy9nwEvSLQuw4g8mCVesbedffcPjMgQ', fusionopts);
+countyLayer.setMap(map);
+
+bikeMapLayer = new google.maps.BicyclingLayer();
+bikeMapLayer.setMap(map);  // turned on for now
+
+infoWindow2 = new google.maps.InfoWindow(
+{maxWidth: 240 }
+);
+
+// downloadUrl2, called below reads the xml file generated by genxml.php
+downloadUrl2("genxml.php", function(data2) {
+var xml2 = data2.responseXML;
+var markers2 = xml2.documentElement.getElementsByTagName("marker");
+
+markersArray = []; // create array to store markers
+markersCount = []; // create array to track markers
+
+// loop below iterates through the variable markers2 which is an array of all the
+// marker elements read from var xml2
+
+for (var i2 = 0; i2 < markers2.length; i2++) {
+var name2 = markers2[i2].getAttribute("name");
+name2old = name2;
+name2 = name2.replace(/\&apos;/gi, "'");
+ var idz = markers2[i2].getAttribute("idz");
+ var userName = markers2[i2].getAttribute("userName");
+ var type2 = markers2[i2].getAttribute("type");
+
+ var linkURL = markers2[i2].getAttribute("linkURL");
+ var address2 = markers2[i2].getAttribute("address");
+ //
+
+ var imageAddress = markers2[i2].getAttribute("imageAddress");
+
+ var comments2 = markers2[i2].getAttribute("comments");
+ if (comments2 == null) {comments2 = ""};
+ var point2 = new google.maps.LatLng(
+     parseFloat(markers2[i2].getAttribute("lat")),
+     parseFloat(markers2[i2].getAttribute("lng")));
+ var lngString = point2.lng().toString();
+ var latString = point2.lat().toString();
+   if (imageAddress =="" || imageAddress == "inv16x16.png" ) {
+   	imageAddress = "inv16x16.png";
+   	imageSize = "278px";
+   }
+   else
+   {
+   		imageSize = "240px";
+   }
+
+// still in the var i2 markers2[] loop
+// create html for the InfoWindow that opens when the user clicks on an existing icon, label, or iconic label
+   	  if (userName == "") {
+   	  	userName = "Anonymous";
+   	  }
+
+      var html2 = "<div class='viewBoxClass' style='border: 3px gold groove' id='infoTable'><span id='infoWindowTitle' >"+ name2 + "</span>"
+      + "<a href='http://assets.zgroks.com/uploads/" + imageAddress + "'><img title='Left Click to view full-size Image, Back to Return.' src='http://assets.zgroks.com/uploads/" + imageAddress + "' width='" + imageSize +"'/></a><br>"
+      + comments2 + "<br>"
+     // + "<tr><th>" + "Link URL (if any): <a href='" +linkURL + "' target='_blank'</>" + linkURL +"</a><br>"
+      + "<hr color='brown'><span id='whoWhenPosted'><small>Posted to this Map at " + address2 + " by " + userName + ".</small><hr>"
+      
+      + "<table class='navigationClass' align='center' width='100%'><tr><td align='center'><a href='#' title= 'Zoom to this Location.' onclick='zoomInTo("
+      + latString + " , " + lngString + "); return false;'><img height='24' width='24' align='middle' src='http://bike.zgroks.com/zoomIn.png'/></a></td>"
+      +"<td align='center'><a href='#' title= 'Directions to this Location.' onclick='transitTo("
+      + latString + " , " + lngString + "); return false;'><img height='24' width='24' align='middle' src='http://bike.zgroks.com/directions.png'/></a></td>"
+      +"<td align='center'><a href='#' title= 'Add/Replace Image. (Smaller Ones work Best.)' onclick='addImage(" + idz + "); return false;'><img align='middle' height='24' width='24' src='http://bike.zgroks.com/upload.png'/></a></td>"
+      +"<td align='center'><span id='hideMarker'><a href='#' title='Hide this Marker'' onclick='hideMarker(" + i2 + "); return false;'><img height='24' width='24' align='middle' src='http://bike.zgroks.com/hide.png'/></a></td></td>"
+      +"<td align='center'><span id='showMarker'><a href='#' title='Show Only this Marker' onclick='showOnly(" + i2 + "); return false;'><img height='24' width='24' align='middle' src='http://www.zgroks.com/icons/filter.png'/></a></td>"
+      +"<td align='center'><span id='fbPost2'><a href='#' title='Post a link on Facebook' id='goToButton2' onclick='javascript:fbPost2(" + idz + ");return false;' ><img height='24' width='24' align='middle' src='http://bike.zgroks.com/facebookShare.png'/></a></span></td>"
+      +"<td align='center'><span id='tweetPost2'><a href='#' title='Post a link on Twitter' id='goToButton3' onclick='javascript:tweetPost(" + idz + ");return false;'><img height='24' width='24' align='middle' src='http://bike.zgroks.com/twitterShare.png'/></a></span></td>"
+      // + "<td align='center'><a href='#' title= 'Show only this Type' onclick='showOnly("
+      // + i2 + "); return false;'><img src='http://www.zgroks.com/icons/filter.png'/></a></td>"
+      + "<td align='center'><a href='#' title= 'Send this Link by Email.' onclick='javascript:reportToAdmin("
+      + latString + " , " + lngString +" , " + idz + "); return false;'><img height='24' width='24' align='center' src='http://bike.zgroks.com/flag.png'/></a></td></tr>"
+      +  "</table>"
+      +  "</br>"
+      +  "</div>";
+
+    $("#reportButton").button();
+
+	 //
+   // if type2 == 'Label 10 pt' then icon: icon2.imageAddress ?
+   // if saving label save address for icon to imageAddress
+
+   var icon2 = customIcons[type2] || {};
+   var marker2 = new google.maps.Marker({
+     //map: map,
+     draggable: true,
+     title: name2,
+     position: point2,
+     icon: icon2.icon,
+     shadow: icon2.shadow
+   });// end definition of var marker2
+
+
+// sections below link dynamic labels to the markers and the database
+
+
+if (type2 == 'Destination') {
+    	marker2.setIcon("http://www.zgroks.com/icons/destination.png");
+    	marker2.setDraggable(true);
+    	marker2.setTitle(name2);
+    	marker2.setAnimation(google.maps.Animation.DROP);
+    }
+
+if (type2 == 'Red Disk') {
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'Map Label') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'brown 12 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'brown 14 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'green 10 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'green 12 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'green 14 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'red 10 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'red 12 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'red 14 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'amber 10 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'amber 12 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+if (type2 == 'amber 14 pt') {
+    	marker2.setIcon(icon2.icon + name2);
+    	marker2.setDraggable(true);
+
+    }
+
+//  at this point, icon2.icon is a link to the URL for the icon for marker2[type2]
+//  so type2 should refer to the "type" for the associated icon, tested below
+//		var icon_and_addy = icon2.icon + "," + type2;
+//		alert(icon_and_addy);
+
+   bindInfoWindow2(marker2, map, infoWindow2, html2);
+   marker2.category = type2;
+   markersArray.push(marker2);
+   markersCount.push(idz);
+
+ }    // end of var i2 loop through markers2[];
+
+markerclusterer = new MarkerClusterer(map,markersArray,
+       {'gridSize': 10,
+       	'zoomOnClick': true,
+       	'ignoreHidden': true,
+      'maxZoom': 16}
+ );   // end markerclusterer
+
+// lines below hide user-added markers when application starts
+
+
+if (qsParm['idz'])
+{
+	idz = qsParm['idz'];
+	map.setZoom(13);
+	$("#dialogDiv").dialog("close");
+	openInfoWindow(idz);
+}
+}   // end of callback function(data2) in downloadUrl2
+      );      // end of parameters to downloadUrl2
+
+    infowindow = new google.maps.InfoWindow({
+     content: html
+ });
+
+    //google.maps.event.addDomListener(button, 'click', function() {
+    //panoramioLayer.setTag(tag.value);
+    //});
+
+ var addData2 = document.getElementById('addData');
+
+ google.maps.event.addDomListener(addData2, 'click', function() {
+   	   var markerCenter = map.getCenter();
+       marker = new google.maps.Marker({
+         position: markerCenter,
+         draggable: false,
+         map: map
+       });
+       google.maps.event.addListener(marker, "click", function() {
+      // map.set'(16);
+       infowindow.open(map, marker);
+       });
+   } ); // end of add listener
+
+
+   google.maps.event.addListener(map, "rightclick", function(event) {
+
+       marker = new google.maps.Marker({
+         position: event.latLng,
+         draggable: false,
+         map: map
+       });
+       google.maps.event.addListener(marker, "click", function() {
+      // map.set'(16);
+       infowindow.open(map, marker);
+
+       });
+   } ); // end of add listener
+
+
+
+
+
+
+$('#gaddress').keydown(function(event){
+    if(event.keyCode == 13){
+        //$('#goButton').click();
+        geocode();
+
+    }
+});
+
+//toggleLayers();
+//aboutUs();
+//toggleIconList();
+
+if (qsParm['idz']) {
+
+	};
+
+
+
+}     // end of load();  // end of load()
+
+
+
+ // function below used
+    function zoomInTo(lat,lng) {
+    	var pointZoom = new google.maps.LatLng(
+    	    lat,
+    	    lng);
+  		map.setMapTypeId(google.maps.MapTypeId.HYBRID);
+    	map.panTo(pointZoom);
+    	map.setZoom(17);
+
+    	    }
+
+
+
+
+
+
+
+function geoLocate2() {
+	   if (navigator.geolocation) {
+   	navigator.geolocation.getCurrentPosition(function(position) {
+   		var lat = position.coords.latitude;
+   		var lng = position.coords.longitude;
+   		//Creating LatLng object with latitude and longitude.
+   		var devCenter =  new google.maps.LatLng(lat, lng);
+   		map.setCenter(devCenter);
+   		map.setZoom(17);
+   		//console.log(latitude + " -- " + longitude);
+   	});
+   }
+   else
+   	{ alert('Sorry, Geolocation Not Available');
+ }
+}
+
+
+
+
+
+function addBikeMarker() {
+	$("#addBikeMarker").dialog({
+  title: '&nbsp;&nbsp;&nbsp;User&nbsp;<img title="Bicycling, Good" style="vertical-align:middle" src="http://bike.zgroks.com/greenDisk.php"/>&nbsp;Reported' +
+   ' <img title="Bicycling, Fair" style="vertical-align:middle" src="http://bike.zgroks.com/yellowDisk.php"/>&nbsp;Bicycling' +
+   ' <img title="Bicycling, Poor" style="vertical-align:middle" src="http://bike.zgroks.com/redDisk.php"/>&nbsp;Conditions',
+	autoOpen: true,
+	hide: 'puff',
+	width: 420,
+	maxHeight: 320,
+	resizable: true,
+	closeOnEscape: true,
+	position: ({
+		my: 'right top',
+		at: 'right top',
+		offset: '-375 210',
+		of: '#map'
+	})
+}).css({'max-height' : '640px'});
+} //end function addBikeMarker();
+
+//aboutSymbols() below
+
+function aboutSymbols() {
+	$("#aboutSymbols").dialog({
+  title: '<img src="http://bike.zgroks.com/labeltransA.php?text=Right Click Adds to Map&size=13"/>',
+	autoOpen: true,
+	hide: 'puff',
+	width: 300,
+	maxHeight: 260,
+	resizable: true,
+	closeOnEscape: true,
+	position: ({
+		my: 'right top',
+		at: 'right top',
+		offset: '-370 50',
+		of: '#map'
+	})
+}).css({'max-height' : '340px'});
+} //end function addBikeMarker();
+
+function seeTweets() {
+	$("#seeTweettext").dialog({
+  title: '<img src="http://bike.zgroks.com/labeltransA.php?text=Tweets&size=13"/>',
+	autoOpen: true,
+	hide: 'puff',
+	width: 530,
+	maxHeight: 360,
+	resizable: true,
+	closeOnEscape: true,
+	position: ({
+		my: 'right top',
+		at: 'right top',
+		offset: '-370 50',
+		of: '#map'
+	})
+}).css({'max-height' : '640px'});
+} //end function aboutLayers();
+
+
+function aboutLayers() {
+	$("#aboutLayers").dialog({
+  title: 'Layers',
+	autoOpen: true,
+	hide: 'puff',
+	width: 300,
+	maxHeight: 260,
+	resizable: true,
+	closeOnEscape: true,
+	position: ({
+		my: 'right top',
+		at: 'right top',
+		offset: '-370 50',
+		of: '#map'
+	})
+}).css({'max-height' : '340px'});
+} //end function aboutLayers();
+
+function aboutUs() {
+	$("#dialogDiv").dialog({
+   title: 'Mapgnosis FR',
+  closeOnEscape: true,
+  close: function () { $(this).remove() },
+  draggable: true,
+  position: 'center',
+  width: 300,
+  height: 400,
+  modal: false,
+  open: function (event, ui) {
+    $('#myDialogId').css('overflow', 'hidden'); //this line does the actual hiding
+  }
+}).css({'background-color' : '#000000'});
+} //end function aboutUs();
+
+function clearMyMarkers() {
+	if (markerToggle == 0){
+		markerToggle = 1;
+
+		$("#clearMyMarkers").button().html('<b><a href="" title="	" onclick="javascript:clearMyMarkers();return false;">Hide<br>Markers</a> </b>');
+		markerclusterer.addMarkers(markersArray);
+	  for (var im2 = 0; im2 < markersArray.length; im2++) {
+		markersArray[im2].setVisible(true);
+	  }
+	  } else {
+			markerToggle = 0;
+			markerclusterer.clearMarkers();
+			$("#clearMyMarkers").button().html('<b><a href="" title="Show Markers" onclick="javascript:clearMyMarkers();return false;">Show<br>Markers</a> </b>');
+	  };
+}; // end clearMyMarkers()
+
+
+// function below will zoom out attached to button
+function permaLinkOut2() {
+					infowindow.close();
+          var mcenter = map.getCenter();
+          var mlat = mcenter.lat();
+          var mlng = mcenter.lng();
+          var myZoom = map.getZoom();
+          map.setZoom(myZoom -1);
+};  // end permaLink()
+
+function permaLink() {
+	//$("#map").fadeOut();
+					infowindow.close();
+          var mcenter = map.getCenter();
+          var mlat = mcenter.lat();
+          var mlng = mcenter.lng();
+          var myZoom = map.getZoom();
+          map.setZoom(myZoom +1);
+          //var zoomOutCenter = new google.maps.LatLng(mlat,mlng);
+          //var myType = map.getMapTypeId();
+          //var longUrl = 'http://assets.zgroks.com/index.html?t=' + myType +  '&lat=' + mlat + '&lng=' + mlng + '&z=' + myZoom;
+          //window.location.href = longUrl;
+          //alert(longUrl);
+};  // end permaLink()
+
+
+function panoView() {
+          var mcenter = map.getCenter();
+          var mlat = mcenter.lat();
+          var mlng = mcenter.lng();
+          window.open('http://www.panoramio.com/map/#lt=' + mlat + '&ln=' + mlng + '&z=2&k=2&a=1&tab=1&pl=all');
+}   // end panoView()
+// general format for panoramio: http://www.panoramio.com/map/#lt=43.160461&ln=-77.611910&z=2&k=2&a=1&tab=1&pl=all
+
+
+function transitTo(lat,lng) {
+          var mlat = lat;
+          var mlng = lng;
+          map.setZoom(16);
+          var myType = map.getMapTypeId();
+          var transitUrl=   window.open('http://www.google.com/maps?&saddr=&daddr=' + mlat + ',' + mlng + '&ttype=dep&date=&time=&dirflg=r','_self');
+}   // end function transitTo()
+
+function reportToAdmin(lat,lng,idz) {
+					var pointZoom2 = new google.maps.LatLng(lat,lng);
+    			map.panTo(pointZoom2);
+    			map.setZoom(16);
+					var mcenter = map.getCenter();
+          var mlat = mcenter.lat();
+          var mlng = mcenter.lng();
+          var z = map.getZoom();
+          var myType = map.getMapTypeId();
+          var toAddy= prompt("Email address to send to:","to@some.org");
+          var fromAddy= prompt("Your Name:","Name of Sender");
+          var msgTitle = prompt("Please enter Subject for Email","Subject");
+
+          var mycom = prompt("Please enter your Message","Message");
+          msgTitle = msgTitle + ' - email from: ' + fromAddy;
+          var myWin = window.open('http://assets.zgroks.com/emailAssetMapAdmin.php/?idz=' + idz + '&lat=' + mlat + '&lng=' + mlng + '&z=16&t=' + myType + '&Tname=' + msgTitle + '&comment=' + mycom + '&toAddy= ' + toAddy ,'_self');
+          alert("Email has been sent re: point " + mlat + "," + mlng);
+} // end function reportToAdmin();
+
+function addImage(idz) {
+          var myWin = window.open('http://assets.zgroks.com/upload.php/?idz=' + idz,'_self');
+}  // end function addImage();
+
+
+
+function fbPost() {
+					var mcenter = map.getCenter();
+          var mlat = mcenter.lat();
+          var mlng = mcenter.lng();
+          var z = map.getZoom();
+          if (z > 15) {
+          	z = 15
+          }
+          var myType = map.getMapTypeId();
+          var fbURL = "https://www.facebook.com/sharer.php?u=" + encodeURIComponent("http://assets.zgroks.com/index.html?t=") + encodeURIComponent(myType) + encodeURIComponent("&lat=") + mlat + encodeURIComponent("&lng=") + mlng + encodeURIComponent("&z=") + z;
+          window.open(fbURL,'_self');
+} // end function fbPost();
+
+
+function fbPost2(idz) {
+				 var fbURL2 = "https://www.facebook.com/sharer.php?t='Add your information here..'" + "&u=" + encodeURIComponent("http://assets.zgroks.com/index.html?idz=" + idz);
+				 window.open(fbURL2,'_blank');
+} // end function fbPost2();
+
+function seePix() {
+	window.open('https://plus.google.com/photos/109855466302399198998/albums/5739472937550793217');
+}
+
+function tweetPost(idz) {
+	var pathname3 = "http://assets.zgroks.com/index.html?idz=" + idz;
+  var tweeturl = 'http://twitter.com/share?url=' + encodeURI(pathname3) + '&text=@mapgnosis ~ Add your comments here.';
+  window.open(tweeturl, "height=360, width=480");
+} // end function tweetPost();
+
+
+ function plusOne(idz) {
+ 	var pathname2 = "http://bike.zgroks.com/index.html?idz=" + idz;
+   var plusOneURL = 'https://plusone.google.com/_/+1/confirm?hl=en&url=' + encodeURI(pathname2);
+   window.open(plusOneURL, "height=360, width=480");
+ } // end function plusOne();
+
+
+
+function seeData() {
+	var bigTime = new Date();
+	var rpcNgxd = bigTime.getTime() ;
+	window.open('http://assets.zgroks.com/show.php?rpcNgxd=' + rpcNgxd, '_self');
+}
+
+function showAbout() {
+	var bigTime = new Date();
+	var rpcNgxd = bigTime.getTime() ;
+	window.open('https://www.hackerleague.org/hackathons/at-and-t-rochester-civic-app-challenge/hacks/mapgnosis','_self');
+}
+
+
+
+
+
+
+function seeBLOS() {
+	window.open('http://bike.zgroks.com/blos.html');
+}
+
+function seeTDV() {
+	window.open('http://gis.dot.ny.gov/tdv/');
+}
+
+
+
+
+function seeLinks() {
+	window.open('http://grok.zgroks.com/links.html');
+}
+
+
+function visitBlog() {
+	window.open('http://zgroks.com//participantsMap');
+}
+
+function HackHackers() {
+window.open('https://docs.google.com/spreadsheet/ccc?key=0AgL5SwyNJMgSdGdTNEIzUWV4NGxlVHBpdEQ5eGNkZGc','_self');
+}
+
+function EditTrailsLayer() {
+			   window.open('http://g.co/maps/2f6yf');
+} // end EditTrailsLayer();
+
+//http://map.itoworld.com/road-casualties-usa#lat=43.17517858257225&lon=-77.59159749591411&zoom=14
+
+function openInfoWindow(idz) {
+ for (var i2z = 0; i2z < markersCount.length; i2z++) {
+ var idz2 = markersCount[i2z];
+ if (idz2 == idz) {
+ //	alert(i2z);
+ 	//alert(markersArray.length);
+  google.maps.event.trigger(markersArray[i2z], "click");
+  map.panTo(markersArray[i2z].position);
+  map.setMapTypeId(google.maps.MapTypeId.HYBRID);
+  map.setZoom(17);
+}
+}
+} // end function openInfoWindow()
+
+
+
+function hideMarker(i2) {
+$( "#dialog-confirm" ).dialog({
+           resizable: false,
+           height:140,
+           modal: true,
+           buttons: {
+               "OK, Hide it!": function() {
+               	markersArray[i2].setVisible(false);
+               	infoWindow2.close();
+                   $( this ).dialog( "close" );
+
+    $( "#dialog-confirm-all" ).dialog({
+           resizable: false,
+           height:140,
+           modal: true,
+           buttons: {
+               "OK, Hide All of Them!": function() {
+               	 for (var him2 = 0; him2 < markersArray.length; him2++) {
+               				if (markersArray[him2].icon == markersArray[i2].icon)
+               	 					{
+               								markersArray[him2].setVisible(false);
+               								infoWindow2.close();
+               	    			}  // end if type2
+               	  }  // end for var him
+
+               	infoWindow2.close();
+                   $( this ).dialog( "close" );
+                       },
+               "Don't Hide All": function() {
+                   $( this ).dialog( "close" );
+               }
+           }
+       });	// end dialog to hide all...
+
+  // hide all goes above
+               },
+               "Don't Hide": function() {
+                   $( this ).dialog( "close" );
+               }
+           }
+       });	// end dialog to hide one...
+} // end hideMarker
+
+
+
+
+function showNotBikeMarker() {
+if (toggleNotBikeMarker == 0) {
+	toggleNotBikeMarker = 1;
+
+   for (var him2b = 0; him2b < markersArray.length; him2b++) {
+ 				if (markersArray[him2b].category != 'Bicycle, Amber' && markersArray[him2b].category != 'Bicycle, Red'  && markersArray[him2b].category != 'Bicycle, Green' )
+   					{
+								markersArray[him2b].setVisible(true);
+	    			}  // end if type2
+	    			//markersArray.repaint();
+	  }  // end for var him
+
+//markersArray.repaint();
+//z1e = map.getZoom();
+//map.setZoom(z1e -1);
+//map.setZoom(z1e);
+
+} // end if toggleBikeMarker == 1 loop
+
+}           // end showNotBikeMarker()
+
+
+
+
+function hideNotBikeMarker() {
+if (toggleNotBikeMarker == 1) {
+	toggleNotBikeMarker = 0;
+
+   for (var him2b = 0; him2b < markersArray.length; him2b++) {
+ 				if (markersArray[him2b].category != 'Bicycle, Amber' && markersArray[him2b].category != 'Bicycle, Red'  && markersArray[him2b].category != 'Bicycle, Green' )
+   					{
+								markersArray[him2b].setVisible(false);
+	    			}  // end if type2
+	    			//markersArray.repaint();
+	  }  // end for var him
+
+//markersArray.repaint();
+//z1e = map.getZoom();
+//map.setZoom(z1e -1);
+//map.setZoom(z1e);
+
+} // end if toggleBikeMarker == 1 loop
+
+}           // end hideNotBikeMarker()
+
+
+
+function hideBikeMarker() {
+if (toggleBikeMarker == 1) {
+	toggleBikeMarker = 0;
+
+   for (var him2b = 0; him2b < markersArray.length; him2b++) {
+ 				if (markersArray[him2b].category == 'Bicycle, Amber' || markersArray[him2b].category == 'Bicycle, Red'  ||markersArray[him2b].category == 'Bicycle, Green' )
+   					{
+								markersArray[him2b].setVisible(false);
+	    			}  // end if type2
+	    			//markersArray.repaint();
+	  }  // end for var him
+
+//markersArray.repaint();
+//z1e = map.getZoom();
+//map.setZoom(z1e -1);
+//map.setZoom(z1e);
+
+} // end if toggleBikeMarker == 1 loop
+
+}           // end ()
+
+
+
+function showBikeMarker() {
+if (toggleBikeMarker == 0) {
+	toggleBikeMarker = 1;
+
+   for (var him2b = 0; him2b < markersArray.length; him2b++) {
+ 				if (markersArray[him2b].category == 'Bicycle, Amber' || markersArray[him2b].category == 'Bicycle, Red'  ||markersArray[him2b].category == 'Bicycle, Green' )
+   					{
+								markersArray[him2b].setVisible(true);
+	    			}  // end if type2
+	    			//markersArray.repaint();
+	  }  // end for var him
+
+//markersArray.repaint();
+//z1e = map.getZoom();
+//map.setZoom(z1e -1);
+//map.setZoom(z1e);
+
+} // end if toggleBikeMarker == 1 loop
+
+}           // end hideBikeMarker()
+
+
+
+
+
+
+
+function showOnly(i2) {
+	var j = confirm("Show Only this Type?");
+	 if(j) {
+    infoWindow2.close();
+    for (var shim2 = 0; shim2 < markersArray.length; shim2++) {
+ 				if (markersArray[shim2].icon != markersArray[i2].icon)
+   					{
+								markersArray[shim2].setVisible(false);
+	    			}  // end if type2
+	  }  // end for var him
+		} // end show only this type confirm loop
+az1 = map.getZoom();
+map.setZoom(az1 -1);
+map.setZoom(az1);
+
+
+  }           // end showOnly()
+
+
+
+// function above could be modified so that the user could hide all markers "like this one" which would
+// loop through markersArray[]
+
+
+
+
+
+
+
+    	// function below saves the input data to the sql database using addrow.php
+
+function makeRuler() {
+	 var circleCenter = map.getCenter();
+        centerCircle1 = new google.maps.Circle({
+        	strokeColor: "#FF0000",
+        	strokeOpacity: 0.0,
+          strokeWeight: 1,
+        	fillColor: "#FF0000",
+        	fillOpacity: 0.05,
+        	map: map,
+          center: circleCenter,
+          radius: 1609,    // 1 mile
+          clickable: false
+        });
+         centerCircle2 = new google.maps.Circle({
+        	strokeColor: "#FF00FF",
+        	strokeOpacity: 0.1,
+          strokeWeight: 1,
+        	fillColor: "#FF0000",
+        	fillOpacity: 0.01,
+        	map: map,
+          center: circleCenter,
+          radius: 50,       // 50 meters
+          clickable: false
+        });
+
+      }; // end makeRuler();
+
+
+
+function saveData() {
+  var name = encodeURIComponent(document.getElementById("name").value);
+
+  var type = document.getElementById("type").value;
+  // if type == 'label' save the label as a query string parameter along with labelgenerator.php in the imageAddress Field
+  // then when reading it out if type  == 'label' set the icon as imageAddress
+  if (name == "")
+  	{
+  	name = type;
+  	}
+  // could add code here to catch a label
+  var comments2 = encodeURIComponent(document.getElementById("comments2").value);
+
+  //var linkURL = encodeURIComponent(document.getElementById("linkURL").value);
+
+  var userName = encodeURIComponent(document.getElementById("userName").value);
+  var latlng = marker.getPosition();
+  var currentTime = new Date();
+  var user_comments = currentTime.getTime();
+  //alert(user_comments);
+  var month = currentTime.getMonth() + 1;
+  var day = currentTime.getDate();
+  var year = currentTime.getFullYear();
+
+  var hours = currentTime.getHours();
+  var minutes = currentTime.getMinutes();
+  if (minutes < 10){
+      minutes = "0" + minutes
+  }
+  var address2 = hours + ":" + minutes + " ";
+  address2 +=" on ";
+  address2 += month + "/" + day + "/" + year;
+  var url = "addrow.php?name=" + name + "&user_comments=" + user_comments + "&userName=" + userName + "&address=" + address2 + "&comments=" + comments2  + "&lat=" + latlng.lat() + "&lng=" + latlng.lng() + "&type=" + type;
+      downloadUrl(url, function(data, responseCode) {
+        if (responseCode == 200 && data.length <= 1) {
+          infowindow.close();
+          var mcenter = map.getCenter();
+          var mlat = mcenter.lat();
+          var mlng = mcenter.lng();
+          var z = map.getZoom();
+          var maxZoom = map.get
+          
+          
+          
+          
+          
+          var myType = map.getMapTypeId();
+        window.location.href = 'http://assets.zgroks.com/index.html?t=' + myType + '&lat=' + mlat + '&lng=' + mlng + '&z=' + z;
+        }
+      });
+}      // ends function saveData();
+
+    // this binds the click of a marker to setting contents of an infowindow and opening the infowindow
+function bindInfoWindow2(marker2, map, infoWindow2, html2) {
+      google.maps.event.addListener(marker2, 'click', function() {
+
+        infoWindow2.setContent(html2);
+        infoWindow2.setOptions({maxWidth: 300});
+        infoWindow2.open(map, marker2);
+      });
+    }
+     // creates either an activexobject or an xmlhttprequest, depending
+
+
+function downloadUrl2(url, callback2) {
+      var request2 = window.ActiveXObject ?
+          new ActiveXObject('Microsoft.XMLHTTP') :
+          new XMLHttpRequest;
+      request2.onreadystatechange = function() {
+        if (request2.readyState == 4) {
+          request2.onreadystatechange = doNothing2;
+          callback2(request2, request2.status);
+        }
+      };
+      request2.open('POST', url, true);
+      request2.send(null);
+} // end function downloadUrl2 ;
+
+function doNothing2() {};
+
+//]]>  //end of cdata
+
+function downloadUrl(url, callback) {       // adds Markers to SQL db
+      var request = window.ActiveXObject ?
+          new ActiveXObject('Microsoft.XMLHTTP') :
+          new XMLHttpRequest;
+
+      request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+          request.onreadystatechange = doNothing;
+          callback(request.responseText, request.status);
+        }
+      };
+
+      request.open('GET', url, true);
+      request.send(null);
+}    // end function downloadUrl()
+
+
+function geocode() {
+    var address = document.getElementById("gaddress").value;
+    geocoder.geocode({
+      'address': address,
+      'partialmatch': true}, geocodeResult);
+} // end function geocode() ;
+
+function geocodeResult(results, status) {
+    if (status == 'OK' && results.length > 0) {
+        map.fitBounds(results[0].geometry.viewport);
+        map.setCenter(results[0].geometry.location);
+        var circleCenter = map.getCenter();
+        centerCircle1 = new google.maps.Circle({
+        	strokeColor: "#FF0000",
+        	strokeOpacity: 0.0,
+          strokeWeight: 1,
+        	fillColor: "#FF0000",
+        	fillOpacity: 0.05,
+        	map: map,
+          center: circleCenter,
+          radius: 1609,    // 1 mile
+          clickable: false
+        });
+         centerCircle2 = new google.maps.Circle({
+        	strokeColor: "#FF00FF",
+        	strokeOpacity: 0.1,
+          strokeWeight: 1,
+        	fillColor: "#FF0000",
+        	fillOpacity: 0.01,
+        	map: map,
+          center: circleCenter,
+          radius: 50,       // 50 meters
+          clickable: false
+        });
+     $("#newPermalink").click();
+    } else {
+      alert("Geocode was not successful for the following reason: " + status);
+    }
+} // end function geocodeResult();
+
+//function edit_map() {
+//
+//	        var mcenter = map.getCenter();
+//          var mlat = mcenter.lat();
+//          var mlng = mcenter.lng();
+//          var z = map.getZoom();
+//          var myType = map.getMapTypeId();
+//
+//          var goToLoc = 'https://maps.google.com/maps/ms?msid=212925685488873680953.0004c4ab35f55e7bc304e&msa=0';
+//          //var goToLoc =  'https://maps.google.com/maps/ms?msid=212925685488873680953.0004c4ab35f55e7bc304e&msa=0&z=' + z +'&ll=' + mlat + ',' +mlng;
+//        window.open(goToLoc);
+//} // end function edit_map();
+
+// <iframe width="425" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps/ms?msid=212925685488873680953.0004b6f5861b51720b824&amp;msa=0&amp;ie=UTF8&amp;ll=43.205552,-77.582083&amp;spn=0,0&amp;t=m&amp;output=embed"></iframe><br /><small>View <a href="http://maps.google.com/maps/ms?msid=212925685488873680953.0004b6f5861b51720b824&amp;msa=0&amp;ie=UTF8&amp;ll=43.205552,-77.582083&amp;spn=0,0&amp;t=m&amp;source=embed" style="color:#0000FF;text-align:left">Editable Map Layer</a> in a larger map</small>
+
+
+
+//      #####  ####   ####   ####  #      ######
+//        #   #    # #    # #    # #      #
+//        #   #    # #      #      #      #####
+//        #   #    # #  ### #  ### #      #
+//        #   #    # #    # #    # #      #
+//        #    ####   ####   ####  ###### ######
+//
+//
+//       #        ##   #   # ###### #####   ####
+//       #       #  #   # #  #      #    # #
+//       #      #    #   #   #####  #    #  ####
+//       #      ######   #   #      #####       #
+//       #      #    #   #   #      #   #  #    #
+//       ###### #    #   #   ###### #    #  ####
+
+
+function toggleTraffic() {
+	  if (trafficToggle == 0){
+		trafficToggle = 1;
+		trailsLayer.setMap(map);
+
+	} else {
+		trafficToggle = 0;
+			  trailsLayer.setMap(null);
+		};
+}; // end fuction toggleTraffic()
+
+function toggleJurisdictions() {
+	if (jurisdictionsToggle == 1){
+		jurisdictionsToggle = 0;
+		jurisdictionsLayer.setMap(map);
+	} else
+				{
+				jurisdictionsToggle = 1;
+			  jurisdictionsLayer.setMap(null);
+		};
+}; //end toggleJurisdictions()
+
+function edit_map () {
+
+	        var mcenter = map.getCenter();
+          var mlat = mcenter.lat();
+          var mlng = mcenter.lng();
+          var z = map.getZoom();
+          var myType = map.getMapTypeId();
+          var randomParam = "&randomParam=" + Math.random();
+					//alert(randomParam);
+       var goToLoc =  'http://maps.google.com/maps/ms?msid=212925685488873680953.0004cf2f22e91431032b8&msa=0&ll=43.164547,-77.637709&z=' + z +'&ll=' + mlat + ',' +mlng + randomParam ;
+        window.open(goToLoc);
+}
+ // https://maps.google.com/maps/ms?msid=212925685488873680953.0004cf2f22e91431032b8&msa=0&ll=43.164547,-77.637709&spn=0.002391,0.004823
+ // map reference above will be changed to new maps.google.com layer
+
+function toggleTrails() {
+	  if (trailsToggle == 1){
+		trailsToggle = 0;
+		trailsLayer.setMap(map);
+		//plannedTrailsLayer.setMap(map);
+
+	} else {
+		trailsToggle = 1;
+				trailsLayer.setMap(null);
+				//plannedTrailsLayer.setMap(null);
+		};
+}; // end function toggleTrails() - multi-use trails in the Finger Lakes Region
+
+function toggleCWT() {
+	  if (cwtToggle == 1){
+		cwtToggle = 0;
+		canalwayTrailLayer.setMap(null);
+				} else {
+		cwtToggle = 1;
+				canalwayTrailLayer.setMap(map);
+		};
+}; // end function toggleCWT() // Canalway Trail
+
+function toggleGreeceNY() {
+	  if (greeceToggle == 0){
+		greeceToggle = 1;
+		greeceNYLayer.setMap(map);
+				} else {
+		greeceToggle = 0;
+				greeceNYLayer.setMap(null);
+		};
+}; // end function toggleGreeceNY() // Greece NY
+
+function toggleTruck() {
+	  if (truckToggle == 1){
+		truckToggle = 0;
+		truckLayer.setMap(map);
+				} else {
+		truckToggle = 1;
+				truckLayer.setMap(null);
+		};
+}; // end function toggleTruck() // Truck Layer
+
+//function toggleSnap() {
+//	  if (snapToggle == 1){
+//		snapToggle = 0;
+//		snapLayer.setMap(map);
+//				} else {
+//		snapToggle = 1;
+//				snapLayer.setMap(null);
+//		};
+//}; // end function toggleGreeceNY() // Greece NY
+
+//function toggleNaturalCommunities() {
+//	  if (naturalCommunitiesToggle == 1){
+//		naturalCommunitiesToggle = 0;
+//		naturalCommunitiesLayer.setMap(map);
+//				} else {
+//		naturalCommunitiesToggle = 1;
+//				naturalCommunitiesLayer.setMap(null);
+//		};
+//}; // end function toggleNaturalCommunities() // Greece NY
+
+
+
+
+//function toggleVacancy() {
+//	  if (vacancyToggle == 1){
+//		vacancyToggle = 0;
+//		vacancyLayer.setMap(map);
+//				} else {
+//		vacancyToggle = 1;
+//				vacancyLayer.setMap(null);
+//		};
+//}; // end function toggleGreeceNY() // Greece NY
+
+
+function toggleRPL() {
+	  if (RPLToggle == 1){
+		RPLToggle = 0;
+		freeReducedPriceLunchLayer.setMap(map);
+				} else {
+		RPLToggle = 1;
+				freeReducedPriceLunchLayer.setMap(null);
+		};
+}; // end function toggleGreeceNY() // Greece NY
+
+// new march 31 2014 below
+function toggleBusStops() {
+	  if (trafficToggle == 1){
+		trafficToggle = 0;
+		bikeMapLayerToggle = 0;
+		bikeMapLayer.setMap(map);
+		} else {
+		trafficToggle = 1;
+		bikeMapLayerToggle = 1;
+		bikeMapLayer.setMap(null);
+
+
+
+
+		};
+}; // end function toggleBusStops() // Basic Stop Locations
+
+function toggleTrafficFatalities() {
+	  if (fatalityToggle == 1){
+		fatalityToggle = 0;
+		fatalityLayer.setMap(map);
+				} else {
+		fatalityToggle = 1;
+				fatalityLayer.setMap(null);
+		};
+}; // end function toggleTrafficFatalities() // Greece NY
+
+function toggleTDT() {
+	  if (TDTToggle == 1){
+		TDTToggle = 0;
+		tripleDivideExistingLayer.setMap(map);
+		tripleDivideProposedLayer.setMap(map);
+				} else {
+		TDTToggle = 1;
+		tripleDivideExistingLayer.setMap(null);
+		tripleDivideProposedLayer.setMap(null);
+		};
+}; // end function toggleTDT() // Toggle Triple Divide Trail Layer
+
+
+
+function toggleBrightonNY() {
+	  if (brightonToggle == 1){
+		brightonToggle = 0;
+		brightonNYLayer.setMap(map);
+				} else {
+		brightonToggle = 1;
+				brightonNYLayer.setMap(null);
+		};
+}; // end function toggleBrightonNY() // Greece NY
+
+function toggleJSchull() {
+	  if (j_schull_Toggle == 1){
+		j_schull_Toggle = 0;
+		j_schull_layer.setMap(map);
+				} else {
+		j_schull_Toggle = 1;
+				j_schull_layer.setMap(null);
+		};
+}; // end function toggleBrightonNY() // Greece NY
+
+
+function toggleNYfourColor() {
+	  if (nyFourColorToggle == 1){
+		map.setZoom(7);
+		nyFourColorLayer.setMap(map);
+		nyFourColorToggle = 1;
+				} else {
+		nyFourColorToggle = 0;
+				nyFourColorLayer.setMap(null);
+		};
+}; // end function toggleNYfourColor() // NY - Four Color County Map
+
+function toggleBikeMap() {
+	  if (bikeMapToggle == 0){
+		bikeMapToggle = 1;
+		rocBikeMapLayer.setMap(map);
+	} else {
+		bikeMapToggle = 0;
+		rocBikeMapLayer.setMap(null);
+		};
+}; // end function toggleBikeMap()
+
+//function togglePanoramio() {
+//	if (panoramioToggle == 0){
+//		panoramioToggle = 1;
+//    newCenter2 = map.getCenter();
+//    panoramioLayer.setMap(map);
+//    infowindow.close();
+//    google.maps.event.trigger(map, "resize");
+//    map.panTo(newCenter2);
+//	} else
+//   {panoramioToggle = 0;
+//   	newCenter = map.getCenter();
+//   panoramioLayer.setMap(null);
+//   google.maps.event.trigger(map, "resize");
+//   map.panTo(newCenter);
+//   		};
+//}; // end function togglePanoramio()
+
+//function togglertEditLayer() {
+//	if (rtEditToggle == 0){
+//		rtEditToggle = 1;
+//		rtEditLayer.setMap(map);
+//	} else
+//				{rtEditToggle = 0;
+//			   rtEditLayer.setMap(null);
+//		};
+//}; // end function toggleEditLayer() // not used - this allows the editing of maps at google.maps.com
+
+//function toggleSchull() {
+//	  if (shullToggle == 0){
+//		shullToggle = 1;
+//		js_layer.setMap(map);
+//	} else {
+//		shullToggle = 0;
+//			  js_layer.setMap(null);
+//		};
+//} ;// end function toggleSchull; // not used - refers to layer developed by Professor Jon Schull at RIT
+
+//function toggleParcels() {
+//	  if (parcelToggle == 0){
+//		parcelToggle = 1;
+//		parcelLayer.setMap(map);
+//	} else {
+//		parcelToggle = 0;
+//			  parcelLayer.setMap(null);
+//		};
+//} ;// end function toggleParcels() // not used - shows parcels in vicinity of Kendrick Road - I-390 Project;
+// toggletoggle
+
+
+//initial state of Toggles which is a list of layers as well
+var truckToggle=0;
+var placesToggle=0;
+var brightonToggle=0;
+var vacancyToggle=0;
+var RPLToggle=0;
+var naturalCommunitiesToggle=0;
+var greeceToggle=0;
+var TDTToggle=0;
+var jurisdictionsToggle=1;
+var weatherToggle=0;
+var fatalityToggle=0;
+var bikeMapToggle=0;
+var markerToggle=1;
+var toggleBikeMarker = 1;
+var toggleNotBikeMarker = 1;
+var busStopToggle =0
+
+var trafficToggle = 0;
+//var rtEditToggle = 0;
+var parcelToggle = 0;
+var bicycleToggle = 0;
+var panoramioToggle = 0;
+var trailsToggle = 0;
+var cwtToggle = 0;
+var j_schull_Toggle = 0;
+
+var nyFourColorToggle = 0;
+
+function zoomOut() {
+	  nowZoom = map.getZoom();
+	  if (nowZoom >1) {
+	  	nowZoom-- ;
+	  	map.setZoom(nowZoom);
+	  	}
+	  	else
+{ }}    // end zoomMax
+
+function zoomIn() {
+	  nowZoom2 = map.getZoom();
+	  if (nowZoom2 <18) {
+	  	nowZoom2++ ;
+	  	map.setZoom(nowZoom2);
+	  	}
+	  	else
+	  		{ }}    // end zoomIn
+
+    $("#userAddedIconsCheckbox").click ;
+
+    function doNothing() {};     // donothing from AddTest
+    // ends the JavaScript code ~ april 2014 ~ robert torzynski
+  </script>
+  </head>
+
+    <body onload="myload()" >
+
+  	  <div id="dialog-confirm" title="Hide this Marker?" style= "display:none">
+            <p><span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>If you want to hide this Marker, click OK.</p>
+            </div>    <!-- end div dialog-confirm whether or not to hide an individual marker -->
+            <div id="dialog-confirm-all" title="Hide all of this Type?" style= "display:none">
+            <p><span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>If you want to hide all of this Type, click OK.</p>
+      </div>   <!-- end div dialog-confirm-all whether or not to hide all of a particular marker type-->
+
+
+  			<script type="text/javascript">
+
+        $('#userAddedIconsCheckbox').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+
+              	//alert("box checked, markerToggle = " + markerToggle);
+              	markerToggle = 0;
+              	clearMyMarkers();
+              	//alert("clearMyMarkers() called now markerToggle = " + markerToggle);
+          		} else {
+
+          			//alert("iconsBoxUnchecked");
+          			markerToggle = 1;
+          			clearMyMarkers();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end userAddedIconsCheckbox click function
+
+        $('#userAddedLayerCheckbox').click(function() {
+        	rtEditLayer.setMap(rtEditLayer.getMap() ? null: map);
+                 		}); // end userAddedLayerCheckbox click function
+
+        $('#googleWeather').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+              	weatherToggle= 1 ;
+              	weatherLayer.setMap(map);
+              	cloudLayer.setMap(map);
+
+             // 	alert("iconsBoxChecked");
+          		} else {
+
+          		//	alert("iconsBoxUnchecked");
+          			weatherToggle = 0;
+          			weatherLayer.setMap(null);
+          			cloudLayer.setMap(null);
+
+              // the checkbox was unchecked
+          		}
+          		}); // end googleWeather click function
+
+        $('#googleBike').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+              	bicycleToggle= 1 ;
+              	bikeMapLayer.setMap(map);
+             // 	alert("iconsBoxChecked");
+          		} else {
+
+          		//	alert("iconsBoxUnchecked");
+          			bicycleToggle = 0;
+          			bikeMapLayer.setMap(null);
+
+              // the checkbox was unchecked
+          		}
+          		}); // end googleBike click function
+
+        $('#panoramioLayerCheckbox').click(function() {
+              	panoramioLayer.setMap(panoramioLayer.getMap() ? null: map);
+              	}); // end panoramioLayerCheckbox click function
+
+        $('#googlePlaces').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+              	placesToggle= 0 ;
+             // 	$("#RocBike").click();
+              	usePlaces();
+             // 	alert("iconsBoxChecked");
+          		} else {
+
+          		//	alert("iconsBoxUnchecked");
+          			placesToggle = 1;
+								usePlaces();
+              // the checkbox was unchecked
+          		}
+          		}); // end googlePlaces click function
+
+
+// sections below modified on 4/12/2014 using straight jquery UI
+ $('#pLink').click(function() {
+         	seeData();
+ 		});  // end googleTraffic click function
+$('#goButton').click(function() {
+              	geocode();
+      		});  // end googleTraffic click function
+$('#geoLocate').click(function() {
+              	geoLocate2();
+      		});  // end googleTraffic click function	
+$('#about').click(function() {
+              	aboutUs();
+      		});  // end googleTraffic click function	
+$('#resetToggle').click(function() {
+              	permaLink();
+      		});  // end googleTraffic click function	
+
+$('#permaLinkOut').click(function() {
+              	permaLinkOut2();
+      		});  // end googleTraffic click function	
+
+
+        $('#googleTraffic').click(function() {
+              	trafficLayer.setMap(trafficLayer.getMap() ? null: map);
+     		});  // end googleTraffic click function
+
+
+        $('#toggleTrailsBox').click(function() {
+        	trailsLayer.setMap(trailsLayer.getMap() ? null: map);
+     		}); // end toggleTrailsBox function
+
+     		$('#toggleRocBikeMapBox').click(function() {
+        	rocBikeMapLayer.setMap(rocBikeMapLayer.getMap() ? null: map);
+     		}); // end toggleTrailsBox function
+
+     		$('#toggleJurisdictionsBox').click(function() {
+        	jurisdictionsLayer.setMap(jurisdictionsLayer.getMap() ? null: map);
+     		}); // end toggleTrailsBox function
+
+
+
+        $('#toggleNYfourColor').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              	nyFourColorToggle = 1 ;
+              	toggleNYfourColor();
+
+              	jurisdictionsToggle = 0;
+								jurisdictionsLayer.setMap(null);
+								$("#toggleJurisdictionsBox").attr("checked","");
+
+								trailsToggle = 0;
+								trailsLayer.setMap(null);
+								$("#toggleTrailsBox").attr("checked","");
+
+								rtEditToggle = 0;
+          			rtEditLayer.setMap(null);
+          			$("#userAddedLayerCheckbox").attr("checked","");
+
+								markerToggle = 0;
+								clearMyMarkers();
+								$("#userAddedIconsCheckbox").attr("checked","");
+
+          		} else {
+
+          			//alert("iconsBoxUnchecked");
+          			nyFourColorToggle = 0;
+          			toggleNYfourColor();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end toggleNYfourColor function
+
+        $('#toggleTrafficFatalities').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              	fatalityToggle = 1 ;
+              	toggleTrafficFatalities();
+          		} else {
+
+          			fatalityToggle = 0;
+          			toggleTrafficFatalities();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end toggleTrafficFatalities function
+
+        $('#toggleVacancyBox').click(function() {
+							vacancyLayer.setMap(vacancyLayer.getMap() ? null: map);
+        }); // end toggleVacancyBox function
+
+
+        $('#toggleBikeCrashBox').click(function() {
+							heatmap.setMap(heatmap.getMap() ? null: map);
+        }); // end toggleVacancyBox function
+
+
+        $('#togglePedCrashBox').click(function() {
+							heatmap2.setMap(heatmap2.getMap() ? null: map);
+        }); // end toggleVacancyBox function
+
+
+                $('#toggleSeniorCrashBox').click(function() {
+							seniorCrashHeatMap.setMap(seniorCrashHeatMap.getMap() ? null: map);
+        }); // end toggleVacancyBox function
+
+
+        $('#togglekidsUnder10CrashBox').click(function() {
+							kidsUnder10CrashHeatMap.setMap(kidsUnder10CrashHeatMap.getMap() ? null: map);
+        }); // end toggleVacancyBox function
+
+
+        $('#toggleAlcoholCrashBox').click(function() {
+							heatmap3.setMap(heatmap3.getMap() ? null: map);
+        }); // end toggleVacancyBox function
+
+        $('#toggleDeerCrashBox').click(function() {
+							heatmap4.setMap(heatmap4.getMap() ? null: map);
+        }); // end toggleVacancyBox function
+
+        $('#toggleRunOffRoadBox').click(function() {
+							heatmap5.setMap(heatmap5.getMap() ? null: map);
+        }); // end toggleVacancyBox function
+
+
+
+
+
+    $('#toggleSnapBox').click(function() {
+      snapLayer.setMap(snapLayer.getMap() ? null: map);
+    }); // end toggleVacancyBox function
+
+    $('#toggleNaturalCommunitiesBox').click(function() {
+		  naturalCommunitiesLayer.setMap(naturalCommunitiesLayer.getMap() ? null: map);
+    }); // end toggleVacancyBox function
+
+  // copy for RGRTA bus stops here
+      $('#rgrtaTransitStopLayer').click(function() {
+              	rgrtaTransitStopLayer.setMap(rgrtaTransitStopLayer.getMap() ? null: map);
+          		}); // end panoramioLayerCheckbox click function
+
+
+
+
+
+    $('#toggleRPLBox').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+              	RPLToggle = 1 ;
+              	toggleRPL();
+              	//alert("iconsBoxChecked");
+          		} else {
+
+          			//alert("iconsBoxUnchecked");
+          			RPLToggle = 0;
+          			toggleRPL();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end toggleRPLBox function
+
+
+
+
+
+        $('#toggleGreeceBox').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              	greeceToggle = 0 ;
+              	toggleGreeceNY();
+          		} else {
+          			greeceToggle = 1;
+          			toggleGreeceNY();
+          		}
+          		}); // end toggleGreeceBox function
+
+        $('#toggleTruck').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+              	truckToggle = 1 ;
+              	toggleTruck();
+              	//alert("iconsBoxChecked");
+          		} else {
+
+          			//alert("iconsBoxUnchecked");
+          			truckToggle = 0;
+          			toggleTruck();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end toggleTruck function
+
+        $('#toggleTDTBox').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              	TDTToggle = 1 ;
+              	toggleTDT();
+              	//alert("iconsBoxChecked");
+          		} else {
+
+          			//alert("iconsBoxUnchecked");
+          			TDTToggle = 0;
+          			toggleTDT();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end toggleTDTBox function
+
+        $('#toggleBrightonBox').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+          			trailsLegend();
+              // the checkbox was checked
+              	brightonToggle = 1 ;
+              	toggleBrightonNY();
+              	//alert("iconsBoxChecked");
+          		} else {
+
+          			//alert("iconsBoxUnchecked");
+          			brightonToggle = 0;
+          			toggleBrightonNY();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end toggleBrightonBox function
+
+        $('#multiVersityCheckbox').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+              	j_schull_Toggle = 1 ;
+              	toggleJSchull();
+          		} else {
+          			j_schull_Toggle = 0;
+          			toggleJSchull();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end Toggle greeceToggle
+
+        $('#toggleCWTBox').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+              	CWTToggle = 1 ;
+              	toggleCWT();
+          		} else {
+          			CWTToggle = 0;
+          			toggleCWT();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end toggleCWTBox function
+
+        $('#toggleJurisdictionsBox').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+          		//	trailsLegend();
+              // the checkbox was checked
+              	jurisdictionsToggle = 1 ;
+              	toggleJurisdictions();
+              	//alert("iconsBoxChecked");
+          		} else {
+
+          			//alert("iconsBoxUnchecked");
+          			jurisdictionsToggle = 0;
+          			toggleJurisdictions();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end toggleJurisdictionsBox function
+
+  			$('#RocBike').click(function() {
+          	var $this = $(this);
+          // 	$this will contain a reference to the checkbox
+
+          		if ($this.is(':checked')) {
+              // the checkbox was checked
+              	bikeMapToggle= 0 ;
+              	toggleBikeMap();
+             // 	alert("iconsBoxChecked");
+          		} else {
+
+          		//	alert("iconsBoxUnchecked");
+          			bikeMapToggle = 1;
+          			toggleBikeMap();
+
+              // the checkbox was unchecked
+          		}
+          		}); // end RocBike.click function
+
+  			function newShow() {
+  				    	$("#newShow").dialog({
+  				    		title: 'Posts in Reverse Chronological Order ~ Ctrl-F to Search ~&nbsp;&nbsp;&nbsp;<a href="http://bike.zgroks.com/show.php" target="_blank" title="This can be copied and pasted into OpenOffice.org Calc">Copy</a>',
+            	  autoOpen: true,
+            	  width: 768,
+            	  height: 1024,
+            	  resizable: true,
+            	  closeOnEscape: true,
+            	  position: ({
+         	  	  my: 'right top',
+         	  	  at: 'right top',
+         	  	  offset: '0, 50',
+         	  	  of: '#map'
+         	  	  })
+         	  	  });	// end dialog
+         	  	  $("#newShow").load("http://bike.zgroks.com/show.php");
+         	  	  $('#newShow').css('overflow', 'auto');
+         	  	} // end function newShow //
+
+
+  			function toggleLayers () {
+           		$("#layersList").dialog({
+            	  title: '<img src="http://bike.zgroks.com/labeltransA.php?text=Map Layers&size=13" title="Layers are listed below." />',
+            	  autoOpen: true,
+            	  hide: 'puff',
+            	  width: 360,
+            	  resizable: true,
+            	  closeOnEscape: true,
+            	  position: ({
+         	  	  my: 'right top',
+         	  	  at: 'right top',
+         	  	  offset: '0, 50',
+         	  	  of: '#map'
+         	  	  })
+         	  	  });
+         	  	} // end function toggleLayers //
+
+         	  		function toggleIconList () {
+           		$("#iconsList").dialog({
+            	  title: '<img src="http://bike.zgroks.com/labeltransA.php?text=Legend&size=13" title="Icons are listed below." />',
+            	  autoOpen: true,
+            	  hide: 'puff',
+            	  width: 360,
+            	  resizable: true,
+            	  closeOnEscape: true,
+            	  position: ({
+         	  	  my: 'right top',
+         	  	  at: 'right top',
+         	  	  offset: '0, 80',
+         	  	  of: '#map'
+         	  	  })
+         	  	  });
+         	  	} // end function toggleLayers //
+
+
+        function toggleLayers2 () {
+         	    $("#dialogDiv").dialog("close");
+           		$("#seePlaces").dialog({
+            	  title: 'List of Google Places on Map',
+            	  autoOpen: true,
+            	  hide: 'puff',
+            	  width: 360,
+            	  resizable: true,
+            	  closeOnEscape: true,
+            	  position: ({
+         	  	  my: 'right top',
+         	  	  at: 'right top',
+         	  	  offset: '-371, 50',
+         	  	  of: '#map'
+         	  	  })
+         	  	  });
+         	  	} // end function toggleLayers //
+
+        function usePlaces() {
+         	 			if (placesToggle == 0) {
+         	 				placesToggle = 1;
+                toggleLayers2();
+             	} else {
+             		if (placesToggle == 1) {
+         	 				placesToggle = 0;
+           	  }}
+         	  	} // end function usePlaces() //
+
+      </script>
+
+  	 	<div id="newShow" scroll="auto" style= "display: none">
+  		</div> <!-- end newShow div -->
+
+    <div id="dialogDiv" style= "display: none" >
+
+    <!-- Video below shows this Application in "Label Mode" describes most of the functions of this "Icon Mode" as well.
+    <iframe width="560" height="315" src="http://www.youtube.com/embed/WMihX8tb97Q" frameborder="1" allowfullscreen></iframe> -->
+
+    Mapgnosis FR (Field Reporter) lets you add to the Map in a Snap. No sign-in required. Then link to Facebook and Twitter, or E-mail.  Easy to Use. Maps Icons Collection used CC BY SA 3.0 <a href="http://mapicons.nicolasmollet.com" target = "_blank"> Nicolas Mollet</a><hr color="gold">
+    Mapgnosis is an entry by <a href="http://www.linkedin.com/in/roberttorzynski/"/>Robert Torzynski </a>in the <a href="https://www.hackerleague.org/hackathons/at-and-t-rochester-civic-app-challenge/hacks" title="More about this Map" target="_blank"/>AT&T Rochester Civic App Challenge</a>. Please try it out, I'd love to hear your feedback!
+			<hr color="brown">
+ <b>Features Include:</b></br>
+    	<ul><li>Easy to Add Markers to the Map.</li>
+    		<li>Photographs and Comments can be Included.</li>
+    		<li>Links to Facebook, Twitter, and E-mail.</li>
+    		<li>Users can Add Photographs </li>
+    		<li>Database Open, Savable, and Useful</li>
+    	</ul>
+		<hr color="brown">
+   	<b>To add to this Map:</b><br>
+    <ol><li><b>Click Add Button at Upper Left</b></li>
+    		<li>Click Generic Marker that Appears</li>
+    		<li>Select Marker, fill-in details, save</li>
+   </ol>
+<hr color="brown">
+<table style='font-size: 1.0em; color: white'>
+<tr><td colspan="2"><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Marker Functions:</b></td></tr>
+<tr><td align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img align="middle" title="Zoom to this Location" src="http://bike.zgroks.com/zoomIn.png"/></td><td>&nbsp;&nbsp;&nbsp;Zoom</td></tr>
+<tr><td align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img align="middle" title="Get Directions to this Location" src="http://bike.zgroks.com/directions.png"/></td><td>&nbsp;&nbsp;&nbsp;Directions</td></tr>
+<tr><td align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img align="middle" title="Upload or Replace Photo" src="http://bike.zgroks.com/upload.png"/></td><td>&nbsp;&nbsp;&nbspUpload Photo</td></tr>
+<tr><td align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img align="middle" title="Post a Permalink to Facebook" src="http://bike.zgroks.com/facebookShare.png"/></td><td>&nbsp;&nbsp;&nbsp;Facebook</td></tr>
+<tr><td align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img align="middle" title="Post a Permalink to Twitter" src="http://bike.zgroks.com/twitterShare.png"/></td><td>&nbsp;&nbsp;&nbsp;Twitter</td></tr>
+<tr><td align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img align="middle" title="E-mail a Permalink" src="http://bike.zgroks.com/flag.png"/></td><td>&nbsp;&nbsp;&nbsp;E-mail</td></tr>
+<tr><td align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img align="middle" title="Show only this Type" src="http://www.zgroks.com/icons/filter.png"/></td><td>&nbsp;&nbsp;&nbspShow Only</td></tr>
+<tr><td align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img align="middle" title="E-mail a Permalink" src="http://bike.zgroks.com/hide.png"/></td><td>&nbsp;&nbsp;&nbsp;Hide</td></tr>
+</table>
+<hr color="brown">
+
+</div> <!-- end dialogDiv -->
+
+ 	<div id="map2wrapper"> <!-- map2wrapper -->
+ <div id ="map">
+ 	 </div> 		<!-- end map div -->
+ </div><!-- end map2wrapper div-->
+
+</body>
+</html>

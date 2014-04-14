@@ -1,0 +1,288 @@
+<style type="text/css">
+	html {height: 100%;
+		}
+	body {height: 100%;	
+				margin: 0px
+		}
+  
+  ul, ol {
+  	margin-top: 5px;
+  	margin-bottom: 5px
+  }
+ 
+  img {
+  	border-width: 0;
+  	align: center;
+  } 
+ 
+ 	a {
+ 		color: green;
+ 	}  
+  
+ [title=Show\ 45\ degree\ view], [title=Zoom\ in\ to\ show\ 45\ degree\ view], [title=Zoom\ in\ to\ show\ 45-degree\ view] {
+  display:none !important;
+} 
+  
+  #whoWhenPosted {
+  	color: blue;
+  	font-weight: 300;
+  } 
+   
+  #infoWindowTitle {
+  	color: green;
+  	font-weight: 600;
+  }
+  
+ /* Table that describes the Map */
+ #aboutTable {
+ 	font-size: 16pt; 	
+ }
+
+/* to be deleted  #my_element_id {
+  	display: none
+  } */
+
+.headerLabel {
+	border: white solid 1px;
+}
+  
+#map {
+        height:100%;
+        width: 100%;
+        margin: 0px;
+ 	 }
+@media only screen 
+and (min-device-width : 480px) 
+and (max-device-width : 568px) { /* STYLES GO HERE */} 	 
+ 	 
+      
+#map2wrapper {
+} 	      
+ 	      
+#mapWrapper {
+	border: 1px solid black;
+} 
+
+/*This is the toolbar at the top of the map with 'Go To' etc. */  
+
+#headerBar, #headerBar2 {
+	display: none;
+  background: #DDF;
+  background-image:url('http://www.zgroks.com/icons/assetsTopBar2.png');
+	background-repeat:repeat-x;
+	white-space: nowrap; 
+}
+
+  
+#reportButton, #hideButton, #zoomIn
+  {
+  	width: 94px;
+  } 
+
+ /** places css will go here **/
+ 
+#seePlaces {
+	float: right;
+	height:100%;
+	width: 25%;
+	
+}
+ 
+ #listing {
+ 	color: white;
+  width: 100%;
+  height: 40%;
+  overflow: auto;
+  cursor: pointer;
+}
+#controls {
+  width: 100%;
+    height: 50%;
+    border: 1px solid;
+  overflow: auto;
+  padding: 0px;
+  font-size: 10px;
+}
+.placeIcon {
+  width: 16px;
+  height: 16px;
+  margin: 2px;
+}
+#results {
+  font-size: 10px;
+  border-collapse: none;
+  width: 100%;
+  height: 50%;
+  overflow: auto;
+  cursor: pointer;
+}
+
+#locationField {
+	float: right;
+  width: 100%;
+  height: 24px;
+}
+
+#autocomplete {
+  width: 100%;
+}
+  
+.hide-content{
+  display: none;
+}
+
+.yellow {
+	font-color: yellow;
+}
+
+   
+	/**The window below opens up to allow the user to add a marker**/
+	.infoInput{
+ 	font-size: 8pt; 
+ 	font-family: arial, verdana, ms sans serif;  
+ 	padding: 2px; 
+ 	background-color:#CCFFCC;
+ 	background-repeat: repeat;
+	}
+
+	/**The window below opens up when the user adds a marker**/
+	#layersList, #iconsList {
+ 	font-size:8pt; 
+ 	font-family: arial, verdana, ms sans serif;  
+ 	padding: 2px; 
+  background-color: #EEFFEE;
+	}
+	
+	/**The window below opens up when the user adds a marker**/
+	#dialogDiv {
+ 	font-size:12pt; 
+ 	font-family: arial, verdana, ms sans serif;  
+ 	padding: 2px; 
+  background-color: #EEFFEE;
+	}
+	#navigationClass {
+		width: 200px;
+	}
+	
+	#creditTable {
+ 	font-size: 9pt; 
+ 	font-family: arial, verdana, ms sans serif;  
+ 	padding: 2px; 
+ 	background-image:url('http://www.zgroks.com/icons/clouds.png');
+ 	background-repeat: repeat;
+	}
+	
+
+	/**The window below opens when the user clicks a previously-added marker**/ 
+	
+ .viewBoxClass { 
+ 	font-size: 10pt; 
+ 	font-family: arial, verdana, ms sans serif;  
+ 	padding: 2px; 
+ 	overflow: auto;
+ 		}  
+	
+	/*input fields */
+	INPUT { 
+	border-width: 2px;
+	margin-right: 2px;
+	padding-right: 2px;
+	color: black;
+	font-family: arial, verdana, ms sans serif;
+	font-weight: bold;
+	font-size: 8pt; 
+}  
+ 
+ #firstLineInfo {
+ 	 position:absolute; top: 0px; left:0px; z-index:1; 
+ 	text-align: left; 
+}
+ 
+ #lowerInfo {
+ 	position:absolute; top: 90px; left:0px; z-index:1; 
+ 	text-align: left; 
+ 	height: 100px;
+}	
+ #gaddressBox
+  { 
+ }
+ 
+ #gaddress 
+ {
+ 	padding: 2px;
+ 	padding-left: 2px;
+ 	padding-top: 2px;
+ 	padding-bottom: 2px;
+ 	margin-bottom: 10px;
+ 	margin-top: 1px;
+ 	font-family: arial, verdana, ms sans serif;
+	font-size: 10pt;
+}
+ 
+#trailsToggle, #bikeToggle, #iconsToggle, #seeData, #clearMyMarkers, #about, #seeData, #seeBLOS, #seeTDV, #seeSearch
+  { 
+  	
+  	padding: 0px;
+  	font-size: 9pt;
+  	font-weight: 200;
+  	white-space: nowrap; 
+ }
+ #zoomInButton, {
+ 	font-size: 20;
+ 	padding-bottom: 3px;
+}
+
+ 
+#addData,  #pLink, #layersToggle, #about, #geoLocate , #resetToggle, #permaLinkOut
+  { 
+  	margin: 1px;
+  	padding: 2px;
+  	font-size: 16pt;
+  	font-weight: 200;
+  	white-space: nowrap;
+}
+
+#addData {
+	margin-top: 2px;
+}
+
+#about {
+	margin-bottom: 10px;
+}
+
+
+  
+ #goButton
+  { 
+  	padding: 5px;
+  	font-size: 16pt;
+  	font-weight: 200;
+  	white-space: nowrap; 
+ }
+ 
+ 
+ #resetToggle
+ {
+ 	margin-bottom: 1px;
+}
+ 
+ 
+ /*button row (toolbar)*/
+ #buttonRow 
+ { 
+  position:absolute; top:2px; z-index:1; 
+ }
+
+#logoDiv 
+ { 
+  position:absolute; top:72px; right:5px; z-index:1; 
+ }
+
+ /*input for the google geocoder()*/ 
+  .googGoto
+  {
+  	padding-right: 0px;
+  	}
+ /*buttons on the button row (toolbar)*/ 	
+   
+</style>
