@@ -1,6 +1,6 @@
 <?php
 require("dbAssetMapInfo.php");
-// adminMapgnosis.php allows any markers to be deleted
+
 $nowTime= $_GET['rpcNgxd'];
 
 function parseToXML($htmlStr) 
